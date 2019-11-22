@@ -1,7 +1,5 @@
 # tiff_at_shp
 
-[![DOI](https://zenodo.org/badge/199067255.svg)](https://zenodo.org/badge/latestdoi/199067255)
-
 tiff_at_shp is a Python script to sample a TIFF image
 at shapefile feature points
 
