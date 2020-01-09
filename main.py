@@ -39,7 +39,7 @@ with open(pairs_path, mode='r') as csv_file:
     for i, row in enumerate(csv_reader):
         image_path = row["image_path"]
         shapefile_path = row["shapefile_path"]
-
+        print(shapefile_path)
         # Get pixel values at each shapefile point feature
         # Check if files already there
         save_name = os.path.basename(shapefile_path)[-23] + "_" + os.path.basename(image_path)[4:12] + ".csv"
