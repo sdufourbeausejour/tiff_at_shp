@@ -24,6 +24,7 @@ __author__ = "Sophie Dufour-Beauséjour"
 
 import os
 import csv
+import numpy as np
 # from this project
 import tiff_at_shp
 
@@ -31,7 +32,7 @@ results_dir = "results/"
 pairs_path = "pairs.csv"
 band_names = ["HH","HV","VH","VV","HH/VV","HH/HV","VV/VH"]
 band_index_to_dB = [0, 1, 2, 3]
-overwrite = 0 # overwrite result text files or not
+overwrite = 1 # overwrite result text files or not
 
 # batch over many pairs of files
 with open(pairs_path, mode='r') as csv_file:
@@ -39,14 +40,44 @@ with open(pairs_path, mode='r') as csv_file:
     for i, row in enumerate(csv_reader):
         image_path = row["image_path"]
         shapefile_path = row["shapefile_path"]
-        print(shapefile_path)
+
+        if not "20180508" in image_path:
+            continue
+        # Save name
+        preffix = ""
+        for s in ["_D_", "_S_", "_K_"]:
+            if s in shapefile_path:
+                preffix = s[1]+"_"
+        suffix = ""
+        for s in ["transect_noship", "notransect", "nopolynia", "no_33-34"]:
+            if s in shapefile_path:
+                suffix = "_" + s
+        save_name = os.path.basename(preffix + os.path.basename(image_path)[4:12] + suffix + ".csv")
+
         # Get pixel values at each shapefile point feature
         # Check if files already there
-        save_name = os.path.basename(shapefile_path)[-23] + "_" + os.path.basename(image_path)[4:12] + ".csv"
         if not overwrite and os.path.exists(results_dir+save_name):
             print("pixel values already written to text file: " + save_name)
         else:
             data = tiff_at_shp.pixel_values(image_path, shapefile_path, results_dir,
                                         band_names, band_index_to_dB=band_index_to_dB)
+
+            ## Some data wrangling
+            # Replace n/a by nan
+            data = data.replace("n/a", np.nan)
+            # Remove inf rows
+            data = data[data["HH"] != "-inf"]
+            data = data[data["HH"] != float("-inf")]
+            # Replace ice == 0 by nan
+            key_ice = [x for x in data.keys() if "Ice" in x][0]
+            data = data.replace({key_ice: 0}, np.nan)
+            # Remove track point in D_1704
+            if "D_20170419_notransect" in save_name:
+                data = data[data[key_ice] != "43.0"]
+            # Remove 33-34 from K 1801
+            if "K_20180129" in save_name:
+                data = data[data["ID_Map"] != "K_33"]
+                data = data[data["ID_Map"] != "K_34"]
+
             # Save to txt
             data.to_csv(results_dir+save_name)
