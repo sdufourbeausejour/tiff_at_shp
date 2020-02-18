@@ -13,6 +13,7 @@
 # This file is imported in main.py
 # Contents:
 # - pixel_values: get pixel values at shp feature coordinates
+# - mean_pixel_values: get mean pixel values at shp feature coordinates for box
 
 from __future__ import print_function
 

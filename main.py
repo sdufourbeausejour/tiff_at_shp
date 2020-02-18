@@ -63,9 +63,9 @@ with open(pairs_path, mode='r') as csv_file:
         if not overwrite and os.path.exists(results_dir+save_name):
             print("pixel values already written to text file: " + save_name)
         else:
-            print("Computing mean in " + str(box) + "x" + str(box) + " box")
-            data = tiff_at_shp.mean_pixel_values(image_path, shapefile_path, results_dir,
-                                        band_names, box, band_index_to_dB=band_index_to_dB)
+            # print("Computing mean in " + str(box) + "x" + str(box) + " box")
+            data = tiff_at_shp.pixel_values(image_path, shapefile_path, results_dir,
+                                        band_names, band_index_to_dB=band_index_to_dB)
             ## Some data wrangling
             # Replace n/a by nan
             data = data.replace("n/a", np.nan)
@@ -86,7 +86,7 @@ with open(pairs_path, mode='r') as csv_file:
             # Save to txt with a comment at the end
             data.to_csv(results_dir+save_name)
             with open(results_dir+save_name, 'a') as f:
-                f.write("# Polarimetric parameter values are a mean over a "+str(box)+"x"+str(box)+" box\n")
+                # f.write("# Polarimetric parameter values are a mean over a "+str(box)+"x"+str(box)+" box\n")
                 f.write("# Image: "+image_path+"\n")
                 f.write("# Shp: "+shapefile_path+"\n")
             print(shapefile_path)
