@@ -25,14 +25,16 @@ __author__ = "Sophie Dufour-Beauséjour"
 import os
 import csv
 import numpy as np
+import pandas as pd
 # from this project
 import tiff_at_shp
 
-results_dir = "results/"
+results_dir = "results/nearest_neighbour/"
 pairs_path = "pairs.csv"
 band_names = ["HH","HV","VH","VV","HH/VV","HH/HV","VV/VH"]
 band_index_to_dB = [0, 1, 2, 3]
-overwrite = 1 # overwrite result text files or not
+overwrite = 0 # overwrite result text files or not
+box = 5 # box for spatial mean
 
 # batch over many pairs of files
 with open(pairs_path, mode='r') as csv_file:
@@ -40,9 +42,11 @@ with open(pairs_path, mode='r') as csv_file:
     for i, row in enumerate(csv_reader):
         image_path = row["image_path"]
         shapefile_path = row["shapefile_path"]
-
-        if not "20180508" in image_path:
+        if "#" in shapefile_path:
             continue
+
+        # if not "20170416" in image_path:
+        #     continue
         # Save name
         preffix = ""
         for s in ["_D_", "_S_", "_K_"]:
@@ -59,9 +63,9 @@ with open(pairs_path, mode='r') as csv_file:
         if not overwrite and os.path.exists(results_dir+save_name):
             print("pixel values already written to text file: " + save_name)
         else:
-            data = tiff_at_shp.pixel_values(image_path, shapefile_path, results_dir,
-                                        band_names, band_index_to_dB=band_index_to_dB)
-
+            print("Computing mean in " + str(box) + "x" + str(box) + " box")
+            data = tiff_at_shp.mean_pixel_values(image_path, shapefile_path, results_dir,
+                                        band_names, box, band_index_to_dB=band_index_to_dB)
             ## Some data wrangling
             # Replace n/a by nan
             data = data.replace("n/a", np.nan)
@@ -79,5 +83,10 @@ with open(pairs_path, mode='r') as csv_file:
                 data = data[data["ID_Map"] != "K_33"]
                 data = data[data["ID_Map"] != "K_34"]
 
-            # Save to txt
+            # Save to txt with a comment at the end
             data.to_csv(results_dir+save_name)
+            with open(results_dir+save_name, 'a') as f:
+                f.write("# Polarimetric parameter values are a mean over a "+str(box)+"x"+str(box)+" box\n")
+                f.write("# Image: "+image_path+"\n")
+                f.write("# Shp: "+shapefile_path+"\n")
+            print(shapefile_path)
