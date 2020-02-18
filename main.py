@@ -29,12 +29,16 @@ import pandas as pd
 # from this project
 import tiff_at_shp
 
-results_dir = "results/nearest_neighbour/"
-pairs_path = "pairs.csv"
-band_names = ["HH","HV","VH","VV","HH/VV","HH/HV","VV/VH"]
-band_index_to_dB = [0, 1, 2, 3]
+results_dir = "results/nearest_neighbour_HAa/"
+pairs_path = "pairs_TC2_HAa.csv"
+if "HAa" in results_dir:
+    band_names = ["H", "A", "a"]
+    band_index_to_dB = 0
+else:
+    band_names = ["HH", "HV", "VH", "VV", "HH/VV", "HH/HV", "VV/VH"]
+    band_index_to_dB = [0, 1, 2, 3]
 overwrite = 0 # overwrite result text files or not
-box = 5 # box for spatial mean
+# box = 5 # box for spatial mean
 
 # batch over many pairs of files
 with open(pairs_path, mode='r') as csv_file:
@@ -69,12 +73,17 @@ with open(pairs_path, mode='r') as csv_file:
             ## Some data wrangling
             # Replace n/a by nan
             data = data.replace("n/a", np.nan)
-            # Remove inf rows
-            data = data[data["HH"] != "-inf"]
-            data = data[data["HH"] != float("-inf")]
+            if not "HAa" in results_dir:
+                # Remove inf rows
+                data = data[data["HH"] != "-inf"]
+                data = data[data["HH"] != float("-inf")]
+            else:
+                data = data[data["H"] != "0.0"]
+                data = data[data["H"] != 0]
             # Replace ice == 0 by nan
             key_ice = [x for x in data.keys() if "Ice" in x][0]
             data = data.replace({key_ice: 0}, np.nan)
+            data = data.replace({key_ice: "0.0"}, np.nan)
             # Remove track point in D_1704
             if "D_20170419_notransect" in save_name:
                 data = data[data[key_ice] != "43.0"]
