@@ -29,16 +29,19 @@ import pandas as pd
 # from this project
 import tiff_at_shp
 
-results_dir = "results/nearest_neighbour_HAa/"
-pairs_path = "pairs_TC2_HAa.csv"
+results_dir = "TSX"
+pairs_path = "pairs_TSX.csv"
 if "HAa" in results_dir:
     band_names = ["H", "A", "a"]
     band_index_to_dB = 0
-else:
+elif "RS2" in results_dir:
     band_names = ["HH", "HV", "VH", "VV", "HH/VV", "HH/HV", "VV/VH"]
     band_index_to_dB = [0, 1, 2, 3]
-overwrite = 0 # overwrite result text files or not
-# box = 5 # box for spatial mean
+elif "TSX" in results_dir:
+    band_names = ["VV"]
+    band_index_to_dB = 0
+overwrite = 1 # overwrite result text files or not
+box = 5 # box for spatial mean
 
 # batch over many pairs of files
 with open(pairs_path, mode='r') as csv_file:
@@ -48,7 +51,12 @@ with open(pairs_path, mode='r') as csv_file:
         shapefile_path = row["shapefile_path"]
         if "#" in shapefile_path:
             continue
-
+        if "orbit13"in image_path:
+            results_dir = "results/TSX_orbit13_5/"
+        elif "orbit21" in image_path:
+            results_dir = "results/TSX_orbit21_5/"
+        elif "orbit89" in image_path:
+            results_dir = "results/TSX_orbit89_5/"
         # if not "20170416" in image_path:
         #     continue
         # Save name
@@ -60,7 +68,10 @@ with open(pairs_path, mode='r') as csv_file:
         for s in ["transect_noship", "notransect", "nopolynia", "no_33-34"]:
             if s in shapefile_path:
                 suffix = "_" + s
-        save_name = os.path.basename(preffix + os.path.basename(image_path)[4:12] + suffix + ".csv")
+        if "RS2" in image_path:
+            save_name = os.path.basename(preffix + os.path.basename(image_path)[4:12] + suffix + ".csv")
+        elif "orbit" in image_path:
+            save_name = os.path.basename(preffix + os.path.basename(image_path)[8:16] + suffix + ".csv")
 
         # Get pixel values at each shapefile point feature
         # Check if files already there
@@ -68,15 +79,17 @@ with open(pairs_path, mode='r') as csv_file:
             print("pixel values already written to text file: " + save_name)
         else:
             # print("Computing mean in " + str(box) + "x" + str(box) + " box")
-            data = tiff_at_shp.pixel_values(image_path, shapefile_path, results_dir,
-                                        band_names, band_index_to_dB=band_index_to_dB)
+            # data = tiff_at_shp.pixel_values(image_path, shapefile_path, results_dir,
+            #                             band_names, band_index_to_dB=band_index_to_dB)
+            data = tiff_at_shp.mean_pixel_values(image_path, shapefile_path, results_dir,
+                                                 band_names, box, band_index_to_dB=band_index_to_dB)
             ## Some data wrangling
             # Replace n/a by nan
             data = data.replace("n/a", np.nan)
             if not "HAa" in results_dir:
                 # Remove inf rows
-                data = data[data["HH"] != "-inf"]
-                data = data[data["HH"] != float("-inf")]
+                data = data[data["VV"] != "-inf"]
+                data = data[data["VV"] != float("-inf")]
             else:
                 data = data[data["H"] != "0.0"]
                 data = data[data["H"] != 0]
@@ -98,4 +111,3 @@ with open(pairs_path, mode='r') as csv_file:
                 # f.write("# Polarimetric parameter values are a mean over a "+str(box)+"x"+str(box)+" box\n")
                 f.write("# Image: "+image_path+"\n")
                 f.write("# Shp: "+shapefile_path+"\n")
-            print(shapefile_path)
