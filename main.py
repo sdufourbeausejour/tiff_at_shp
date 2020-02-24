@@ -30,7 +30,7 @@ import pandas as pd
 import tiff_at_shp
 
 results_dir = "TSX"
-pairs_path = "pairs_TSX.csv"
+pairs_path = "pairs_TSX_VH_HH.csv"
 if "HAa" in results_dir:
     band_names = ["H", "A", "a"]
     band_index_to_dB = 0
@@ -38,9 +38,9 @@ elif "RS2" in results_dir:
     band_names = ["HH", "HV", "VH", "VV", "HH/VV", "HH/HV", "VV/VH"]
     band_index_to_dB = [0, 1, 2, 3]
 elif "TSX" in results_dir:
-    band_names = ["VV"]
+    band_names = ["VH"]
     band_index_to_dB = 0
-overwrite = 1 # overwrite result text files or not
+overwrite = 0 # overwrite result text files or not
 box = 5 # box for spatial mean
 
 # batch over many pairs of files
@@ -52,11 +52,14 @@ with open(pairs_path, mode='r') as csv_file:
         if "#" in shapefile_path:
             continue
         if "orbit13"in image_path:
-            results_dir = "results/TSX_orbit13_5/"
+            results_dir = "results/TSX_HH_orbit13_5/"
+            band_names = ["HH"]
         elif "orbit21" in image_path:
-            results_dir = "results/TSX_orbit21_5/"
+            results_dir = "results/TSX_VH_orbit21_5/"
+            band_names = ["VH"]
         elif "orbit89" in image_path:
-            results_dir = "results/TSX_orbit89_5/"
+            results_dir = "results/TSX_VH_orbit89_5/"
+            band_names = ["VH"]
         # if not "20170416" in image_path:
         #     continue
         # Save name
@@ -75,8 +78,13 @@ with open(pairs_path, mode='r') as csv_file:
 
         # Get pixel values at each shapefile point feature
         # Check if files already there
+        date = int(os.path.basename(image_path)[8:16])
         if not overwrite and os.path.exists(results_dir+save_name):
             print("pixel values already written to text file: " + save_name)
+        elif ("orbit21" in image_path) & (date >= 20170502):
+            print("No TSX VH orbit21 image for those dates")
+        elif ("orbit21" in image_path) & (date < 20170911):
+            print("No TSX VH orbit21 image for those dates")
         else:
             # print("Computing mean in " + str(box) + "x" + str(box) + " box")
             # data = tiff_at_shp.pixel_values(image_path, shapefile_path, results_dir,
@@ -86,10 +94,13 @@ with open(pairs_path, mode='r') as csv_file:
             ## Some data wrangling
             # Replace n/a by nan
             data = data.replace("n/a", np.nan)
-            if not "HAa" in results_dir:
+            if "HH" in results_dir:
                 # Remove inf rows
-                data = data[data["VV"] != "-inf"]
-                data = data[data["VV"] != float("-inf")]
+                data = data[data["HH"] != "-inf"]
+                data = data[data["HH"] != float("-inf")]
+            elif "VH" in results_dir:
+                data = data[data["VH"] != "-inf"]
+                data = data[data["VH"] != float("-inf")]
             else:
                 data = data[data["H"] != "0.0"]
                 data = data[data["H"] != 0]
