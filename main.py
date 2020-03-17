@@ -29,8 +29,10 @@ import pandas as pd
 # from this project
 import tiff_at_shp
 
-results_dir = "TSX"
-pairs_path = "pairs_TSX_VH_HH.csv"
+# results_dir = "TSX"
+# pairs_path = "pairs_TSX_VH_HH.csv"
+results_dir = "results/nearest_neighbour_tex_5/"
+pairs_path = "pairs_TC2_tex.csv"
 if "HAa" in results_dir:
     band_names = ["H", "A", "a"]
     band_index_to_dB = 0
@@ -39,6 +41,9 @@ elif "RS2" in results_dir:
     band_index_to_dB = [0, 1, 2, 3]
 elif "TSX" in results_dir:
     band_names = ["VH"]
+    band_index_to_dB = 0
+elif "tex" in results_dir:
+    band_names = ["MEAN_HH", "MEAN_HV", "MEAN_VV", "MEAN_Anisotropy"]
     band_index_to_dB = 0
 overwrite = 0 # overwrite result text files or not
 box = 5 # box for spatial mean
@@ -51,15 +56,15 @@ with open(pairs_path, mode='r') as csv_file:
         shapefile_path = row["shapefile_path"]
         if "#" in shapefile_path:
             continue
-        if "orbit13"in image_path:
-            results_dir = "results/TSX_HH_orbit13_5/"
-            band_names = ["HH"]
-        elif "orbit21" in image_path:
-            results_dir = "results/TSX_VH_orbit21_5/"
-            band_names = ["VH"]
-        elif "orbit89" in image_path:
-            results_dir = "results/TSX_VH_orbit89_5/"
-            band_names = ["VH"]
+        # if "orbit13"in image_path:
+        #     results_dir = "results/TSX_HH_orbit13_5/"
+        #     band_names = ["HH"]
+        # elif "orbit21" in image_path:
+        #     results_dir = "results/TSX_VH_orbit21_5/"
+        #     band_names = ["VH"]
+        # elif "orbit89" in image_path:
+        #     results_dir = "results/TSX_VH_orbit89_5/"
+        #     band_names = ["VH"]
         # if not "20170416" in image_path:
         #     continue
         # Save name
@@ -78,13 +83,14 @@ with open(pairs_path, mode='r') as csv_file:
 
         # Get pixel values at each shapefile point feature
         # Check if files already there
-        date = int(os.path.basename(image_path)[8:16])
+        date = int(os.path.basename(image_path)[4:12])
+        # date = int(os.path.basename(image_path)[8:16])
         if not overwrite and os.path.exists(results_dir+save_name):
             print("pixel values already written to text file: " + save_name)
-        elif ("orbit21" in image_path) & (date >= 20170502):
+        elif ("orbit21" in image_path) & (date >= 20170502) & (date < 20170911) & ("VV" not in save_name):
             print("No TSX VH orbit21 image for those dates")
-        elif ("orbit21" in image_path) & (date < 20170911):
-            print("No TSX VH orbit21 image for those dates")
+            print(save_name)
+            print(date)
         else:
             # print("Computing mean in " + str(box) + "x" + str(box) + " box")
             # data = tiff_at_shp.pixel_values(image_path, shapefile_path, results_dir,
@@ -101,6 +107,9 @@ with open(pairs_path, mode='r') as csv_file:
             elif "VH" in results_dir:
                 data = data[data["VH"] != "-inf"]
                 data = data[data["VH"] != float("-inf")]
+            elif "tex" in results_dir:
+                data = data[data["MEAN_HH"] != "0.0"]
+                data = data[data["MEAN_HH"] != 0]
             else:
                 data = data[data["H"] != "0.0"]
                 data = data[data["H"] != 0]
