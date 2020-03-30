@@ -31,20 +31,27 @@ import tiff_at_shp
 
 # results_dir = "TSX"
 # pairs_path = "pairs_TSX_VH_HH.csv"
-results_dir = "results/nearest_neighbour_tex_5/"
-pairs_path = "pairs_TC2_tex.csv"
+results_dir = "results/RS2_texture/"
+pairs_path = "pairs_RS2.csv"
 if "HAa" in results_dir:
     band_names = ["H", "A", "a"]
     band_index_to_dB = 0
-elif "RS2" in results_dir:
-    band_names = ["HH", "HV", "VH", "VV", "HH/VV", "HH/HV", "VV/VH"]
+    processing_done = "_sub_cal_C3_spk_HAa_TC2"
+elif "ratios" in results_dir:
+    band_names = ["HH", "HV", "VH", "VV", "VV/HH", "HV/HH", "VH/VV"]
     band_index_to_dB = [0, 1, 2, 3]
+    processing_done = "_sub_cal_spk_rat2_TC2"
+elif "texture" in results_dir:
+    band_names = list()
+    for band in ["HH","HV","VV"]:
+        for tex in ["HOM","ASM","MEAN","VAR","COR"]:
+            band_names.append(tex+"_"+band)
+    band_index_to_dB = 0
+    processing_done = "_tex2_TC2"
 elif "TSX" in results_dir:
     band_names = ["VH"]
     band_index_to_dB = 0
-elif "tex" in results_dir:
-    band_names = ["MEAN_HH", "MEAN_HV", "MEAN_VV", "MEAN_Anisotropy"]
-    band_index_to_dB = 0
+
 overwrite = 0 # overwrite result text files or not
 box = 5 # box for spatial mean
 
@@ -52,10 +59,12 @@ box = 5 # box for spatial mean
 with open(pairs_path, mode='r') as csv_file:
     csv_reader = csv.DictReader(csv_file)
     for i, row in enumerate(csv_reader):
-        image_path = row["image_path"]
         shapefile_path = row["shapefile_path"]
+        image_name = os.path.basename(row["image_path"])[0:12]
+        image_path = os.path.join(os.path.dirname(row["image_path"]), image_name+processing_done+".tif")
         if "#" in shapefile_path:
             continue
+
         # if "orbit13"in image_path:
         #     results_dir = "results/TSX_HH_orbit13_5/"
         #     band_names = ["HH"]
@@ -95,7 +104,8 @@ with open(pairs_path, mode='r') as csv_file:
             # print("Computing mean in " + str(box) + "x" + str(box) + " box")
             # data = tiff_at_shp.pixel_values(image_path, shapefile_path, results_dir,
             #                             band_names, band_index_to_dB=band_index_to_dB)
-            data = tiff_at_shp.mean_pixel_values(image_path, shapefile_path, results_dir,
+            if box:
+                data = tiff_at_shp.mean_pixel_values(image_path, shapefile_path, results_dir,
                                                  band_names, box, band_index_to_dB=band_index_to_dB)
             ## Some data wrangling
             # Replace n/a by nan
@@ -107,10 +117,13 @@ with open(pairs_path, mode='r') as csv_file:
             elif "VH" in results_dir:
                 data = data[data["VH"] != "-inf"]
                 data = data[data["VH"] != float("-inf")]
+            elif "ratios" in results_dir:
+                data = data[data["HH"] != "-inf"]
+                data = data[data["HH"] != float("-inf")]
             elif "tex" in results_dir:
                 data = data[data["MEAN_HH"] != "0.0"]
                 data = data[data["MEAN_HH"] != 0]
-            else:
+            elif "HAa" in results_dir:
                 data = data[data["H"] != "0.0"]
                 data = data[data["H"] != 0]
             # Replace ice == 0 by nan
@@ -128,6 +141,23 @@ with open(pairs_path, mode='r') as csv_file:
             # Save to txt with a comment at the end
             data.to_csv(results_dir+save_name)
             with open(results_dir+save_name, 'a') as f:
-                # f.write("# Polarimetric parameter values are a mean over a "+str(box)+"x"+str(box)+" box\n")
+                if box:
+                    f.write("# Image values are a mean over a "+str(box)+"x"+str(box)+" box\n")
                 f.write("# Image: "+image_path+"\n")
                 f.write("# Shp: "+shapefile_path+"\n")
+
+            # Also combine the two DB files when transect; notransect comes first in rows
+            if "notransect" in shapefile_path:
+                save_name = os.path.basename(preffix + os.path.basename(image_path)[4:12] + "_both" + ".csv")
+                data.to_csv(results_dir+save_name,header=1)
+            if "transect_noship" in shapefile_path:
+                save_name = os.path.basename(preffix + os.path.basename(image_path)[4:12] + "_both" + ".csv")
+                data.to_csv(results_dir+save_name, mode='a', header=0)
+                with open(results_dir+save_name, 'a') as f:
+                    if box:
+                        f.write("# Image values are a mean over a "+str(box)+"x"+str(box)+" box\n")
+                    f.write("# Image: "+image_path+"\n")
+                    f.write("# Shp: "+shapefile_path+"\n")
+                    f.write("# combined with notransect"+"\n")
+
+
