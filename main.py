@@ -31,8 +31,8 @@ import tiff_at_shp
 
 # results_dir = "results/RS2_texture/"
 # pairs_path = "pairs_RS2.csv"
-orbit = "orbit89"
-results_dir = "results/TSX_ratios/"+orbit+"/"
+orbit = "orbit21"
+results_dir = "results/TSX_texture/"+orbit+"/"
 pairs_path = "pairs_TSX_"+orbit+".csv"
 
 if ("RS2" in results_dir) & ("HAa" in results_dir):
@@ -57,6 +57,17 @@ elif ("TSX" in results_dir) and ("ratios" in results_dir):
         band_names = ["VHVVRatio"]
     band_index_to_dB = 0
     processing_done = "_sub_rat2"
+elif ("TSX" in results_dir) and ("texture" in results_dir):
+    if "13" in orbit:
+        pols = ["VV","HH"]
+    elif ("21" in orbit) or ("89" in orbit):
+        pols = ["VH","VV"]
+    band_names = list()
+    for band in pols:
+        for tex in ["HOM", "ASM", "MEAN", "VAR", "COR"]:
+            band_names.append(tex + "_" + band)
+    band_index_to_dB = 0
+    processing_done = "_sub_tex2"
 
 overwrite = 0 # overwrite result text files or not
 box = 5 # box for spatial mean
@@ -141,8 +152,13 @@ with open(pairs_path, mode='r') as csv_file:
             data = data[data["VHVVRatio"] != "nan"]
             data = data[data["VHVVRatio"] != "0.0"]
             data = data[data["VHVVRatio"] != 0]
+        elif "TSX_texture/orbit13" in results_dir:
+            print("what data to remove?")
+            # data = data[data["MEAN_VV"] != "nan"]
+        elif ("TSX_ratios/orbit21" in results_dir) or ("TSX_ratios/orbit89" in results_dir):
+            print("what data to remove?")
 
-        # Replace ice == 0 by nan
+            # Replace ice == 0 by nan
         key_ice = [x for x in data.keys() if "Ice" in x][0]
         data = data.replace({key_ice: 0}, np.nan)
         data = data.replace({key_ice: "0.0"}, np.nan)
