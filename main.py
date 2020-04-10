@@ -31,9 +31,10 @@ import tiff_at_shp
 
 # results_dir = "results/RS2_texture/"
 # pairs_path = "pairs_RS2.csv"
-orbit = "orbit21"
+orbit = "orbit89"
 results_dir = "results/TSX_texture/"+orbit+"/"
 pairs_path = "pairs_TSX_"+orbit+".csv"
+print(results_dir)
 
 if ("RS2" in results_dir) & ("HAa" in results_dir):
     band_names = ["H", "A", "a"]
@@ -153,10 +154,15 @@ with open(pairs_path, mode='r') as csv_file:
             data = data[data["VHVVRatio"] != "0.0"]
             data = data[data["VHVVRatio"] != 0]
         elif "TSX_texture/orbit13" in results_dir:
-            print("what data to remove?")
-            # data = data[data["MEAN_VV"] != "nan"]
-        elif ("TSX_ratios/orbit21" in results_dir) or ("TSX_ratios/orbit89" in results_dir):
-            print("what data to remove?")
+            data = data[data["MEAN_VV"] != "nan"]
+            data = data[data["MEAN_VV"] != "0.0"]
+            data = data[data["MEAN_VV"] != 0]
+            data = data[data["MEAN_VV"].notnull()]
+        elif ("TSX_texture/orbit21" in results_dir) or ("TSX_texture/orbit89" in results_dir):
+            data = data[data["MEAN_VV"] != "nan"]
+            data = data[data["MEAN_VV"] != "0.0"]
+            data = data[data["MEAN_VV"] != 0]
+            data = data[data["MEAN_VV"].notnull()]
 
             # Replace ice == 0 by nan
         key_ice = [x for x in data.keys() if "Ice" in x][0]
@@ -191,5 +197,3 @@ with open(pairs_path, mode='r') as csv_file:
                 f.write("# Image: "+image_path+"\n")
                 f.write("# Shp: "+shapefile_path+"\n")
                 f.write("# combined with notransect"+"\n")
-
-

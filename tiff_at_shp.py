@@ -108,7 +108,7 @@ def mean_pixel_values(image_path, shapefile_path, results_dir, band_names, box, 
         # Target box
         half = (box-1)/2
         pix_long_lat = image.index(lx, ly)
-        print(pix_long_lat)
+        # print(pix_long_lat)
         # long / lat is y / x; invert
         top_left_x = pix_long_lat[1]-half
         top_left_y = pix_long_lat[0]-half
@@ -117,7 +117,7 @@ def mean_pixel_values(image_path, shapefile_path, results_dir, band_names, box, 
         window = rasterio.windows.Window(top_left_x, top_left_y, width, height)
         pixels = image.read(window=window)
         mean_pixels = [np.mean(x) for x in pixels]
-        print(mean_pixels)
+        # print(mean_pixels)
         if band_index_to_dB:
             for n in band_index_to_dB:
                 mean_pixels[n] = 10*np.log10(mean_pixels[n])
