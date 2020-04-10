@@ -32,7 +32,7 @@ import tiff_at_shp
 
 # results_dir = "results/RS2_texture/"
 # pairs_path = "pairs_RS2.csv"
-orbit = "orbit89"
+orbit = "orbit21"
 results_dir = "results/TSX_texture/"+orbit+"/"
 pairs_path = "pairs_TSX_"+orbit+".csv"
 print(results_dir)
@@ -41,6 +41,8 @@ print(results_dir)
 system_name = platform.system()
 if system_name in "Windows":
     PC = 1
+else:
+    PC = 0
 
 if ("RS2" in results_dir) & ("HAa" in results_dir):
     band_names = ["H", "A", "a"]
@@ -130,7 +132,7 @@ with open(pairs_path, mode='r') as csv_file:
         if not overwrite and os.path.exists(results_dir+save_name):
             print("pixel values already written to text file: " + save_name)
             continue
-        elif (not "ratios" in results_dir) & ("orbit21" in image_path) & (date >= 20170502) & (date < 20170911) & ("VV" not in save_name):
+        elif ("VH" in save_name) & ("orbit21" in image_path) & (date >= 20170502) & (date < 20170911):
             print("No TSX VH orbit21 image for those dates")
             print(save_name)
             print(date)
