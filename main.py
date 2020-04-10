@@ -26,6 +26,7 @@ import os
 import csv
 import numpy as np
 import pandas as pd
+import platform
 # from this project
 import tiff_at_shp
 
@@ -35,6 +36,11 @@ orbit = "orbit89"
 results_dir = "results/TSX_texture/"+orbit+"/"
 pairs_path = "pairs_TSX_"+orbit+".csv"
 print(results_dir)
+
+## On PC ##
+system_name = platform.system()
+if system_name in "Windows":
+    PC = 1
 
 if ("RS2" in results_dir) & ("HAa" in results_dir):
     band_names = ["H", "A", "a"]
@@ -82,6 +88,14 @@ with open(pairs_path, mode='r') as csv_file:
             continue
         image_name = os.path.basename(row["image_path"])[0:12]
         image_path = os.path.join(os.path.dirname(row["image_path"]), image_name+processing_done+".tif")
+        if PC:
+            shapefile_path.replace("/Volumes/Crabe/Doctorat/BaieDeception/", "Z:"+os.sep)
+            shapefile_path.replace("/", os.sep)
+            image_path.replace("/Volumes/Crabe/Doctorat/BaieDeception/", "Z:"+os.sep)
+            image_path.replace("/", os.sep)
+            print(shapefile_path)
+            print(image_path)
+
         # if "orbit13"in image_path:
         #     results_dir = "results/TSX_HH_orbit13_5/"
         #     band_names = ["HH"]
