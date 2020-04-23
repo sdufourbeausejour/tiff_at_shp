@@ -32,10 +32,19 @@ import tiff_at_shp
 
 # results_dir = "results/RS2_texture/"
 # pairs_path = "pairs_RS2.csv"
-orbit = "orbit21"
-results_dir = "results/TSX_texture/"+orbit+"/"
-pairs_path = "pairs_TSX_"+orbit+".csv"
-print(results_dir)
+# box = 5
+# orbit = "orbit21"
+# results_dir = "results/TSX_texture/"+orbit+"/"
+# pairs_path = "pairs_TSX_"+orbit+".csv"
+# results_dir = "results/no_window/RS2_texture/"
+# pairs_path = "pairs_RS2.csv"
+# box = 1
+results_dir_parent = "results/win_3/"
+results_dir = ""
+linearTSX = 1
+pairs_path = "pairs_TSX_VH_HH.csv"
+box = 3
+overwrite = 0 # overwrite result text files or not
 
 ## On PC ##
 system_name = platform.system()
@@ -77,9 +86,8 @@ elif ("TSX" in results_dir) and ("texture" in results_dir):
             band_names.append(tex + "_" + band)
     band_index_to_dB = 0
     processing_done = "_sub_tex2"
-
-overwrite = 0 # overwrite result text files or not
-box = 5 # box for spatial mean
+elif linearTSX:
+    band_index_to_dB = 0
 
 # batch over many pairs of files
 with open(pairs_path, mode='r') as csv_file:
@@ -88,27 +96,32 @@ with open(pairs_path, mode='r') as csv_file:
         shapefile_path = row["shapefile_path"]
         if "#" in shapefile_path:
             continue
-        image_name = os.path.basename(row["image_path"])[0:12]
-        image_path = os.path.join(os.path.dirname(row["image_path"]), image_name+processing_done+".tif")
-        if PC:
-            shapefile_path.replace("/Volumes/Crabe/Doctorat/BaieDeception/", "Z:"+os.sep)
-            shapefile_path.replace("/", os.sep)
-            image_path.replace("/Volumes/Crabe/Doctorat/BaieDeception/", "Z:"+os.sep)
-            image_path.replace("/", os.sep)
-            print(shapefile_path)
-            print(image_path)
+        if not linearTSX:
+            image_name = os.path.basename(row["image_path"])[0:12]
+            image_path = os.path.join(os.path.dirname(row["image_path"]), image_name+processing_done+".tif")
+        elif linearTSX:
+            image_path = row["image_path"]
+            image_name = "TSX_"+os.path.basename(row["image_path"])[8:16]
+            if "orbit13" in image_path:
+                orbit = "orbit13"
+            elif "orbit21" in image_path:
+                orbit = "orbit21"
+            elif "orbit89" in image_path:
+                orbit = "orbit89"
+            if "08K0001" in image_path:
+                band_names = ["VV"]
+            elif "01K0001" in image_path:
+                band_names = ["HH"]
+            elif "02K0001" in image_path:
+                band_names = ["VH"]
+            results_dir = results_dir_parent+"TSX_"+band_names[0]+"_"+orbit+"/"
 
-        # if "orbit13"in image_path:
-        #     results_dir = "results/TSX_HH_orbit13_5/"
-        #     band_names = ["HH"]
-        # elif "orbit21" in image_path:
-        #     results_dir = "results/TSX_VH_orbit21_5/"
-        #     band_names = ["VH"]
-        # elif "orbit89" in image_path:
-        #     results_dir = "results/TSX_VH_orbit89_5/"
-        #     band_names = ["VH"]
-        # if not "20170416" in image_path:
-        #     continue
+        if PC:
+            shapefile_path.replace("/Volumes/Carbe/Doctorat/BaieDeception/", "Z:"+os.sep)
+            shapefile_path.replace("/", os.sep)
+            image_path.replace("/Volumes/Carbe/Doctorat/BaieDeception/", "Z:"+os.sep)
+            image_path.replace("/", os.sep)
+
         # Save name
         preffix = ""
         for s in ["_D_", "_S_", "_K_"]:
@@ -120,30 +133,31 @@ with open(pairs_path, mode='r') as csv_file:
                 suffix = "_" + s
         if "RS2" in image_path:
             save_name = os.path.basename(preffix + os.path.basename(image_path)[4:12] + suffix + ".csv")
-        elif "0001" in image_path:
-            save_name = os.path.basename(preffix + os.path.basename(image_path)[8:16] + suffix + ".csv")
+        elif "K0001" in image_path:
+            save_name = os.path.basename(preffix + image_name + suffix + ".csv")
         elif "TSX" in image_path:
             save_name = os.path.basename(preffix + os.path.basename(image_path)[4:12] + suffix + ".csv")
 
         # Get pixel values at each shapefile point feature
         # Check if files already there
-        date = int(os.path.basename(image_path)[4:12])
+        date = int(image_name[4:12])
         # date = int(os.path.basename(image_path)[8:16])
         if not overwrite and os.path.exists(results_dir+save_name):
             print("pixel values already written to text file: " + save_name)
             continue
-        elif ("VH" in save_name) & ("orbit21" in image_path) & (date >= 20170502) & (date < 20170911):
+        elif ("VH" in band_names) & ("orbit21" in image_path) & (date >= 20170502) & (date < 20170911):
             print("No TSX VH orbit21 image for those dates")
             print(save_name)
             print(date)
             continue
 
-        # print("Computing mean in " + str(box) + "x" + str(box) + " box")
-        # data = tiff_at_shp.pixel_values(image_path, shapefile_path, results_dir,
-        #                             band_names, band_index_to_dB=band_index_to_dB)
         if box:
             data = tiff_at_shp.mean_pixel_values(image_path, shapefile_path, results_dir,
                                              band_names, box, band_index_to_dB=band_index_to_dB)
+        else:
+            data = tiff_at_shp.pixel_values(image_path, shapefile_path, results_dir,
+                                             band_names, band_index_to_dB=band_index_to_dB)
+
         ## Some data wrangling
         # Replace n/a by nan
         data = data.replace("n/a", np.nan)
@@ -156,13 +170,20 @@ with open(pairs_path, mode='r') as csv_file:
         elif "RS2_HAa" in results_dir:
             data = data[data["H"] != "0.0"]
             data = data[data["H"] != 0]
+        elif "TSX_VV" in results_dir:
+            # Remove inf rows
+            data = data[data["VV"] != "-inf"]
+            data = data[data["VV"] != float("-inf")]
+            data = data[data["VV"] != "nan"]
         elif "TSX_HH" in results_dir:
             # Remove inf rows
             data = data[data["HH"] != "-inf"]
             data = data[data["HH"] != float("-inf")]
+            data = data[data["HH"] != "nan"]
         elif "TSX_VH" in results_dir:
             data = data[data["VH"] != "-inf"]
             data = data[data["VH"] != float("-inf")]
+            data = data[data["VH"] != "nan"]
         elif "TSX_ratios/orbit13" in results_dir:
             data = data[data["VVHHRatio"] != "nan"]
         elif ("TSX_ratios/orbit21" in results_dir) or ("TSX_ratios/orbit89" in results_dir):
@@ -202,10 +223,10 @@ with open(pairs_path, mode='r') as csv_file:
 
         # Also combine the two DB files when transect; notransect comes first in rows
         if "notransect" in shapefile_path:
-            save_name = os.path.basename(preffix + os.path.basename(image_path)[4:12] + "_both" + ".csv")
+            save_name = os.path.basename(preffix + image_name + "_both" + ".csv")
             data.to_csv(results_dir+save_name,header=1)
         if "transect_noship" in shapefile_path:
-            save_name = os.path.basename(preffix + os.path.basename(image_path)[4:12] + "_both" + ".csv")
+            save_name = os.path.basename(preffix + image_name + "_both" + ".csv")
             data.to_csv(results_dir+save_name, mode='a', header=0)
             with open(results_dir+save_name, 'a') as f:
                 if box:
