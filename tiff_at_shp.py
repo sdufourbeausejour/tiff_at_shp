@@ -17,12 +17,10 @@
 
 from __future__ import print_function
 
-import os
 import fiona
 import rasterio
 import numpy as np
 import pandas as pd
-
 
 def pixel_values(image_path, shapefile_path, results_dir, band_names, band_index_to_dB=False, overwrite=0):
     """From a tiff image (path: image_path) and for each point feature in a
