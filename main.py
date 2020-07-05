@@ -44,7 +44,7 @@ results_dir = ""
 linearTSX = 1
 pairs_path = "pairs_TSX_VH_HH.csv"
 box = 3
-overwrite = 1 # overwrite result text files or not
+overwrite = 0 # overwrite result text files or not
 
 ## On PC ##
 system_name = platform.system()
