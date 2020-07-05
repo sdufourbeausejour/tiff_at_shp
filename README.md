@@ -1,7 +1,11 @@
 # tiff_at_shp
 
 tiff_at_shp is a Python script to sample a TIFF image
-at shapefile feature points
+at shapefile feature points using fiona and rasterio.
+
+Version 1.0 used for analysis included in the following manuscript:
+
+S. Dufour-Beauséjour, M Bernier, J. Simon, V. Gilbert, J Tuniq, A. Wendleder and A. Roth. (2020) "Snow-covered sea ice in Salluit, Deception Bay, and Kangiqsujuaq: in situ, RADARSAT-2 and TerraSAR-X observations". Manuscript in preparation.
 
 ## Usage
 
