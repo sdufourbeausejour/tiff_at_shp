@@ -11,9 +11,9 @@ import tiff_at_shp
 tiff_at_shp.pixel_values(image_path, shapefile_path, results_dir, band_names) # get tiff values at all features in shp
 ```
 ## Required packages
-fiona
-rasterio
-pandas
+fiona  
+rasterio  
+pandas  
 
 ## Contributing
 Pull requests are welcome.
