@@ -1,5 +1,7 @@
 # tiff_at_shp
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3930953.svg)](https://doi.org/10.5281/zenodo.3930953)
+
 tiff_at_shp is a Python script to sample a TIFF image
 at shapefile feature points using fiona and rasterio.
 
