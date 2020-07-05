@@ -44,7 +44,7 @@ results_dir = ""
 linearTSX = 1
 pairs_path = "pairs_TSX_VH_HH.csv"
 box = 3
-overwrite = 0 # overwrite result text files or not
+overwrite = 1 # overwrite result text files or not
 
 ## On PC ##
 system_name = platform.system()
@@ -212,25 +212,25 @@ with open(pairs_path, mode='r') as csv_file:
         if "K_20180129" in save_name:
             data = data[data["ID_Map"] != "K_33"]
             data = data[data["ID_Map"] != "K_34"]
-
-        # Save to txt with a comment at the end
-        data.to_csv(results_dir+save_name)
-        with open(results_dir+save_name, 'a') as f:
-            if box:
-                f.write("# Image values are a mean over a "+str(box)+"x"+str(box)+" box\n")
-            f.write("# Image: "+image_path+"\n")
-            f.write("# Shp: "+shapefile_path+"\n")
-
-        # Also combine the two DB files when transect; notransect comes first in rows
-        if "notransect" in shapefile_path:
-            save_name = os.path.basename(preffix + image_name + "_both" + ".csv")
-            data.to_csv(results_dir+save_name,header=1)
-        if "transect_noship" in shapefile_path:
-            save_name = os.path.basename(preffix + image_name + "_both" + ".csv")
-            data.to_csv(results_dir+save_name, mode='a', header=0)
-            with open(results_dir+save_name, 'a') as f:
-                if box:
-                    f.write("# Image values are a mean over a "+str(box)+"x"+str(box)+" box\n")
-                f.write("# Image: "+image_path+"\n")
-                f.write("# Shp: "+shapefile_path+"\n")
-                f.write("# combined with notransect"+"\n")
+        #
+        # # Save to txt with a comment at the end
+        # data.to_csv(results_dir+save_name)
+        # with open(results_dir+save_name, 'a') as f:
+        #     if box:
+        #         f.write("# Image values are a mean over a "+str(box)+"x"+str(box)+" box\n")
+        #     f.write("# Image: "+image_path+"\n")
+        #     f.write("# Shp: "+shapefile_path+"\n")
+        #
+        # # Also combine the two DB files when transect; notransect comes first in rows
+        # if "notransect" in shapefile_path:
+        #     save_name = os.path.basename(preffix + image_name + "_both" + ".csv")
+        #     data.to_csv(results_dir+save_name,header=1)
+        # if "transect_noship" in shapefile_path:
+        #     save_name = os.path.basename(preffix + image_name + "_both" + ".csv")
+        #     data.to_csv(results_dir+save_name, mode='a', header=0)
+        #     with open(results_dir+save_name, 'a') as f:
+        #         if box:
+        #             f.write("# Image values are a mean over a "+str(box)+"x"+str(box)+" box\n")
+        #         f.write("# Image: "+image_path+"\n")
+        #         f.write("# Shp: "+shapefile_path+"\n")
+        #         f.write("# combined with notransect"+"\n")
